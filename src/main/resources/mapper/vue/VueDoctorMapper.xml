@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.vueDao.VueDoctorMapper">
+
+	<!-- vue회원정보 가져오기 -->
+    <select id="vueGetCustomerDetail" parameterType="String" resultType="com.teampj.physicheck.dto.CustomerDTO">
+        SELECT * FROM member WHERE id=#{id}
+    </select>
+    
+     <!-- 의사_담당회원정보 가져오기 -->
+    <select id="vueDocCustomerDetail" parameterType="int" resultType="com.teampj.physicheck.dto.CustomerDTO">
+    <![CDATA[
+        select * from member 
+            where memberNo = (select memberNo from reserve where reserveNo = #{reserveNo})
+        ]]>
+    </select>
+    
+    
+    
+     <!-- 회원정보 불러오기 -->
+    <select id="vueGetCustomerList" parameterType="int" resultType="com.teampj.physicheck.dto.CustomerDTO">
+        SELECT mem.*, r.*
+		FROM member mem, reserve r
+		WHERE mem.memberno = r.memberno
+		AND r.reserveno=#{reserveNo}
+    </select>
+    
+     <!-- 담당회원정보목록(운동) -->
+   <select id="vueGetReserveInfoList2" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    <![CDATA[
+    	SELECT * FROM (SELECT A.*, rownum as rn 
+	 					FROM (
+	 						SELECT rs.*, mem.name, p.testcode
+	 						FROM reserve rs, member mem, physical p
+	 						WHERE rs.memberno = mem.memberno
+	 						AND rs.physicalNo = p.physicalNo
+                            AND rs.paystate=1
+                            AND rs.pshow='n'
+                      ORDER BY rs.reserveno DESC
+                   ) A
+                ) 
+   ]]>
+    </select>
+    
+    <!-- 운동검사 정보 가져오기 -->
+	<!-- 심폐지구력 가져오기 -->
+	<select id="vueGetPhysicalCardio" parameterType="int" resultType="com.teampj.physicheck.dto.CardioEnduranceDTO">
+		SELECT * FROM cardioEndurance WHERE cardioEnduranceNo = #{reserveNo}
+	</select>
+	
+	<!-- 유연성 가져오기-->
+	<select id="vueGetPhysicalFlexibility" parameterType="int" resultType="com.teampj.physicheck.dto.FlexibilityDTO">
+		SELECT * FROM flexibility WHERE flexibilityNo = #{reserveNo}
+	</select>
+	
+	<!-- 순발력 가져오기 -->
+	<select id="vueGetPhysicalAgility" parameterType="int" resultType="com.teampj.physicheck.dto.AgilityDTO">
+		SELECT * FROM agility WHERE agilityNo = #{reserveNo}
+	</select>
+	
+	<!-- 근려 가져오기 -->
+	<select id="vueGetPhysicalMuscularPower" parameterType="int" resultType="com.teampj.physicheck.dto.MuscularPowerDTO">
+		SELECT * FROM muscularPower WHERE muscularPowerNo = #{reserveNo}
+	</select>
+	
+	<!-- 근지구력 가져오기 -->
+	<select id="vueGetPhysicalMuscularEndurance" parameterType="int" resultType="com.teampj.physicheck.dto.MuscularEnduranceDTO">
+		SELECT * FROM muscularEndurance WHERE muscularEnduranceNo = #{reserveNo}
+	</select>
+	
+	<!-- 민첩성 가져오기 -->
+	<select id="vueGetPhysicalQuickness" parameterType="int" resultType="com.teampj.physicheck.dto.QuicknessDTO">
+		SELECT * FROM quickness WHERE quicknessNo = #{reserveNo}
+	</select>
+	
+</mapper>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.dao.DietMapper">
+ 
+ 	<!-- 공통 -->
+	<!-- 식단 정보 조회 -->
+	<select id="getDietList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.DietDTO">
+		SELECT *
+		  FROM (
+		        SELECT A.*, ROWNUM as rn
+		          FROM (SELECT *
+		                  FROM diet
+		                 WHERE show = 'y'
+		                 ORDER BY dietNo DESC
+		                ) A
+		        )
+		 WHERE rn BETWEEN #{start} AND #{end}
+	</select>
+	
+	<!-- 식단 총 개수 -->
+	<select id="getDietTotal" resultType="Integer">
+		SELECT COUNT(*)
+		  FROM diet
+	</select>
+	
+	<!-- 식단 상세조회 -->
+	<select id="getDietDetail" resultType="com.teampj.physicheck.dto.DietDTO">
+		SELECT *
+		  FROM diet
+		 WHERE dietNo = #{dietNo}
+	</select>
+	
+	
+	<!-- 고객용 -->
+	<!-- 조회수 증가 -->
+	<update id="countUp" parameterType="Integer">
+		UPDATE diet
+		   SET count = count + 1
+		 WHERE dietNo = #{dietNo}
+	</update>
+
+	<!-- 의료진용 -->
+	<!-- 식단 등록 -->
+	<insert id="insertDiet" parameterType="com.teampj.physicheck.dto.DietDTO">
+		INSERT INTO diet(dietNo, title, content1, content2, content3, content4, content5, image2, memberNo, image)
+		VALUES((SELECT NVL(MAX(dietNo)+1, 1) FROM diet), #{title}, #{content1}, #{content2}, #{content3}, #{content4}, #{content5}, #{image2}, #{memberNo}, #{image})	
+	</insert>
+	
+	<!-- 식단 삭제 -->
+	<delete id="deleteDiet" parameterType="Integer">
+		UPDATE diet
+		   SET show = 'n'
+		 WHERE dietNo = #{dietNo}
+	</delete>
+
+	<!--  - - - - - Medicine Control - - - - -  -->	
+	<!-- 의약품 정보 조회 -->
+	<select id="getMedicineList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.MedicineDTO">
+		SELECT *
+		  FROM (
+		        SELECT A.*, ROWNUM as rn
+		          FROM (SELECT *
+		                  FROM MEDICINE
+		                 WHERE SHOW = 'y'
+		                 ORDER BY MEDICINENO DESC
+		                ) A
+		        )
+		 WHERE rn BETWEEN #{start} AND #{end}
+	</select>
+	
+	<!-- 의약품 총 갯수 -->	
+	<select id="getMedicTotal" resultType="Integer">
+		SELECT COUNT(*)
+		  FROM MEDICINE
+	</select>
+	
+	<!-- 의약품 등록 -->
+	<insert id="insertMedic" parameterType="com.teampj.physicheck.dto.MedicineDTO">
+		INSERT INTO MEDICINE(MEDICINENO, NAME, IMG, CONTENT1, CONTENT2, MEMBERNO)
+		VALUES((SELECT NVL(MAX(MEDICINENO)+1, 1) FROM MEDICINE), #{name}, #{img}, #{content1}, #{content2}, #{memberNo})	
+	</insert>
+	
+	<!-- 의약품 가져오기 -->
+	<select id="getMedicInfo" resultType="com.teampj.physicheck.dto.MedicineDTO">
+		SELECT *
+		  FROM MEDICINE
+		 WHERE MEDICINENO = #{medicineNo}
+	</select>	
+	
+	<!-- 의약품 수정 -->
+	<update id="setMedicInfo" parameterType="com.teampj.physicheck.dto.MedicineDTO">
+		UPDATE MEDICINE
+		   SET NAME = #{name}, IMG = #{img, jdbcType=VARCHAR}, CONTENT1 = #{content1}, CONTENT2 = #{content2}
+		 WHERE MEDICINENO = #{medicineNo}
+	</update>
+	
+	<!-- 의약품 삭제 -->
+	<delete id="deleteMedic" parameterType="Integer">
+		UPDATE MEDICINE
+		   SET show = 'n'
+		 WHERE MEDICINENO = #{medicineNo}
+	</delete>	
+			
+</mapper>

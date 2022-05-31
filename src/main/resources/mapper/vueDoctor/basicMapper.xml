@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.vue.dao.BasicMapper">
+
+   <!-- ===============================[담당회원정보]==================================== -->
+   <!-- 담당회원정보목록(기본) -->
+   <select id="getVueReserveList1" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    	SELECT *
+    		FROM reserve rs, member mem
+    		WHERE rs.memberno = mem.memberno
+    		AND rs.paystate=1
+    		AND rs.bshow='y'
+    		ORDER BY rs.reserveno DESC
+   </select>
+   
+   <!-- 담당회원정보 -->
+   <select id="getVueMemberInfo1" resultType="com.teampj.physicheck.vue.vo.BasicMemberVO">
+    	SELECT *
+    		FROM reserve rs, member mem
+    		WHERE rs.memberno = mem.memberno
+    		AND rs.paystate=1
+    		AND rs.mshow='y'
+    		AND rs.reserveNo = #{reserveNo}
+    		ORDER BY rs.reserveno DESC
+    </select>
+    <!-- ===============================[기초검사등록]==================================== -->
+	<!-- 체질량 검사 -->
+	<insert id="bmiVueResultInsert" parameterType="com.teampj.physicheck.dto.BmiDTO">
+		INSERT INTO bmi(bmiNo, height, weight, bmi, bodyFat, bodyMuscle, bodyWater)
+		VALUES((SELECT NVL(MAX(${bmiNo}), ${bmiNo}) FROM bmi), #{height}, #{weight}, #{bmi}, #{bodyFat}, #{bodyMuscle}, #{bodyWater})
+	</insert>
+	
+	<!-- 혈압 검사 -->
+	<insert id="pressureVueResultInsert" parameterType="com.teampj.physicheck.dto.PressureDTO">
+		INSERT INTO pressure(pressureNo, pressureHigh, pressureLow)
+		VALUES((SELECT NVL(MAX(${pressure_no}), ${pressure_no}) FROM pressure), #{pressureHigh}, #{pressureLow})
+	</insert>
+	
+	<!-- 소변 검사 -->
+	<insert id="urineVueResultInsert" parameterType="com.teampj.physicheck.dto.UrineDTO">
+		INSERT INTO urine(urineNo, urineProtein, urineAcid, urineGlucose)
+		VALUES((SELECT NVL(MAX(${urine_no}), ${urine_no}) FROM urine), #{urineProtein}, #{urineAcid}, #{urineGlucose})
+	</insert>
+	
+	<!-- 혈액 검사 -->
+	<insert id="bloodVueResultInsert" parameterType="com.teampj.physicheck.dto.BloodDTO">
+		INSERT INTO blood(bloodNo, redBloodCell, whiteBloodCell, bloodPlatelet, liverFunction, bloodGlucose)
+		VALUES((SELECT NVL(MAX(${bloodNo}), ${bloodNo}) FROM blood), #{redBloodCell}, #{whiteBloodCell}, #{bloodPlatelet}, #{liverFunction}, #{bloodGlucose})
+	</insert>
+	
+	<!-- 기초 상위 테이블로 이동 -->
+	<insert id="BasicVueInsert" parameterType="com.teampj.physicheck.dto.BasicDTO">
+		INSERT INTO basic(basicNo, bmiNo, pressureNo, urineNo, bloodNo, testExpense, id)
+		VALUES(#{basicNo}, #{bmiNo}, #{pressureNo}, #{urineNo}, #{bloodNo}, #{testExpense}, #{id})
+	</insert>
+	
+	<!-- 등록시 목록에서 가리기 -->
+	<update id="showUpdateVue" parameterType="int">
+		UPDATE reserve SET bshow='n'
+		WHERE reserveNo=#{reserveNo}
+	</update>
+	
+   <!-- 담당회원결과등록목록(기본) -->
+   <select id="getVueMemberResultInfo" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    	SELECT *
+    		FROM reserve rs, member mem
+    		WHERE rs.memberno = mem.memberno
+    		AND rs.paystate=1
+    		AND rs.bshow='n'
+    		ORDER BY rs.reserveno DESC
+   </select>
+   
+   <!-- 체질량 검사 -->
+    <select id="getVueBmiResult" parameterType="Integer" resultType="com.teampj.physicheck.dto.BmiDTO">
+    	SELECT *
+    	FROM bmi
+    	WHERE bmiNo=#{reserveNo}
+    </select>
+    
+    <!-- 혈압검사 -->
+    <select id="getVuePressureResult" parameterType="Integer" resultType="com.teampj.physicheck.dto.PressureDTO">
+    	SELECT *
+    	FROM pressure
+    	WHERE pressureNo=#{reserveNo}
+    </select>
+    
+    <!-- 소변검사 -->
+    <select id="getVueUrineResult" parameterType="Integer" resultType="com.teampj.physicheck.dto.UrineDTO">
+    	SELECT *
+    	FROM urine
+    	WHERE urineNo=#{reserveNo}
+    </select>
+    
+    <!-- 혈액검사 -->
+    <select id="getVueBloodResult" parameterType="Integer" resultType="com.teampj.physicheck.dto.BloodDTO">
+    	SELECT *
+     	FROM blood
+    	WHERE bloodNo=#{reserveNo}
+    </select>
+	
+ </mapper>

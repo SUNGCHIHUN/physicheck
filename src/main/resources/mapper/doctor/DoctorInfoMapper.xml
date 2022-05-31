@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.dao.DoctorInfoMapper">
+
+	<!-- ===============================[의료진 정보수정]==================================== -->
+	<!-- 의료진 정보 update -->
+	<update id="memberInfoUpdate" parameterType="com.teampj.physicheck.dto.DoctorDTO">
+		UPDATE member SET password=#{password}, name=#{name}, tel=#{tel}, email=#{email}, address=#{address}
+		WHERE id=#{id}
+	</update>
+	
+	<!-- ===============================[일정관리]==================================== -->
+	<!-- 캘린더 불러오기  -->
+	<select id="schduleList" resultType="java.util.Map">
+		SELECT rs.reserveno, TO_CHAR(rs.reservedate, 'YYYY-MM-DD') as RESERVEDATE, TO_CHAR(rs.reservedate, 'HH24:MM:SS') as RESERVETIME, mem.name 
+		FROM reserve rs, member mem
+		WHERE rs.memberno = mem.memberno
+	</select>
+	
+	<!-- ===============================[담당회원정보]==================================== -->
+   <!-- 담당회원정보목록(기본) -->
+   <select id="getReserveInfoList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    <![CDATA[
+    	SELECT * FROM (SELECT A.*, rownum as rn 
+	 					FROM (
+	 						SELECT rs.*, mem.name, b.testcode
+	 						FROM reserve rs, member mem, basic b
+	 						WHERE rs.memberno = mem.memberno
+	 						AND rs.basicNo = b.basicNo
+                            AND rs.paystate=1
+                            AND rs.bshow='n'
+                      ORDER BY rs.reserveno DESC
+                   ) A
+                ) 
+      WHERE rn >= #{start} AND rn <= #{end}
+   ]]>
+    </select>
+    
+    <!-- 담당회원정보목록(운동) -->
+   <select id="getReserveInfoList1" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    <![CDATA[
+    	SELECT * FROM (SELECT A.*, rownum as rn 
+	 					FROM (
+	 						SELECT rs.*, mem.name, p.testcode
+	 						FROM reserve rs, member mem, physical p
+	 						WHERE rs.memberno = mem.memberno
+	 						AND rs.physicalNo = p.physicalNo
+                            AND rs.paystate=1
+                            AND rs.pshow='n'
+                      ORDER BY rs.reserveno DESC
+                   ) A
+                ) 
+      WHERE rn >= #{start} AND rn <= #{end}
+   ]]>
+    </select>
+    
+    <!-- 담당회원정보목록(심리) -->
+   <select id="getReserveInfoList2" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    <![CDATA[
+    	SELECT * FROM (SELECT A.*, rownum as rn 
+	 					FROM (
+	 						SELECT rs.*, mem.name, m.testcode
+	 						FROM reserve rs, member mem, mental m
+	 						WHERE rs.memberno = mem.memberno
+	 						AND rs.mentalNo = m.mentalNo
+                            AND rs.paystate=1
+                            AND rs.mshow='n'
+                      ORDER BY rs.reserveno DESC
+                   ) A
+                ) 
+      WHERE rn >= #{start} AND rn <= #{end}
+   ]]>
+    </select>
+    
+    <!-- 담당회원이전진료정보목록(기초) -->
+    <select id="resultBasicList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    <![CDATA[
+    	SELECT * FROM (SELECT A.*, rownum as rn 
+	 					FROM (
+	 						SELECT rs.*, mem.name
+	 						FROM reserve rs, member mem
+	 						WHERE rs.memberno = mem.memberno
+	 						AND rs.memberNo=#{memberNo}
+                            AND rs.bshow='n'
+                            AND rs.paystate=1
+	 					) A
+	 				) 
+		WHERE rn >= #{start} AND rn <= #{end}
+	]]>
+    </select>
+    
+    <!-- 담당회원이전진료정보목록(심리) -->
+    <select id="resultMentalList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    <![CDATA[
+    	SELECT * FROM (SELECT A.*, rownum as rn 
+	 					FROM (
+	 						SELECT rs.*, mem.name
+	 						FROM reserve rs, member mem
+	 						WHERE rs.memberno = mem.memberno
+	 						AND rs.memberNo=#{memberNo}
+                            AND rs.mshow='n'
+                            AND rs.paystate=1
+	 						ORDER BY rs.reserveno DESC
+	 					) A
+	 				) 
+		WHERE rn >= #{start} AND rn <= #{end}
+	]]>
+    </select>
+    
+    <!-- 기초검사 결과 select -->
+    <!-- 체질량 검사 -->
+    <select id="getBmiResult" parameterType="Integer" resultType="com.teampj.physicheck.dto.BmiDTO">
+    	SELECT *
+    	FROM bmi
+    	WHERE bmiNo=#{reserveNo}
+    </select>
+    
+    <!-- 혈압검사 -->
+    <select id="getPressureResult" parameterType="Integer" resultType="com.teampj.physicheck.dto.PressureDTO">
+    	SELECT *
+    	FROM pressure
+    	WHERE pressureNo=#{reserveNo}
+    </select>
+    
+    <!-- 소변검사 -->
+    <select id="getUrineResult" parameterType="Integer" resultType="com.teampj.physicheck.dto.UrineDTO">
+    	SELECT *
+    	FROM urine
+    	WHERE urineNo=#{reserveNo}
+    </select>
+    
+    <!-- 혈액검사 -->
+    <select id="getBloodResult" parameterType="Integer" resultType="com.teampj.physicheck.dto.BloodDTO">
+    	SELECT *
+     	FROM blood
+    	WHERE bloodNo=#{reserveNo}
+    </select>
+    
+    <!-- 기초검사 결과 update -->
+    <update id="bmiResultUpdate" parameterType="java.util.Map">
+    	UPDATE bmi SET height=#{dto1.height},
+    				   weight=#{dto1.weight},
+    				   bmi=#{dto1.bmi},
+    				   bodyFat=#{dto1.bodyFat},
+    				   bodyMuscle=#{dto1.bodyMuscle},
+    				   bodyWater=#{dto1.bodyWater}
+    	WHERE bmiNo=#{reserveNo}
+    </update>
+    
+    <update id="pressureResultUpdate" parameterType="java.util.Map">
+    	UPDATE pressure SET pressureHigh=#{dto2.pressureHigh},
+    				  		PressureLow=#{dto2.pressureLow}
+    	WHERE pressureNo=#{reserveNo}
+    </update>
+    
+    <update id="urineResultUpdate" parameterType="java.util.Map">
+    	UPDATE urine SET urineProtein=#{dto3.urineProtein},
+    				   	 urineAcid=#{dto3.urineAcid},
+    				   	 urineGlucose=#{dto3.urineGlucose}
+    	WHERE urineNo=#{reserveNo}
+    </update>
+    
+    <update id="bloodResultUpdate" parameterType="java.util.Map">
+    	UPDATE blood SET redBloodCell=#{dto4.redBloodCell},
+    				     whiteBloodCell=#{dto4.whiteBloodCell},
+    				     bloodPlatelet=#{dto4.bloodPlatelet},
+    				     liverFunction=#{dto4.liverFunction},
+    				     bloodGlucose=#{dto4.bloodGlucose}
+    	WHERE bloodNo=#{reserveNo}
+    </update>
+	<!-- ===============================[검사결과등록]==================================== -->
+	<!-- 게시글 갯수 -->
+	<select id="boardCnt" resultType="int">
+        SELECT COUNT(*) FROM reserve
+    </select>
+
+	<!-- 게시글 목록(기본) -->
+    <select id="getReserveList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    <![CDATA[
+    	SELECT * FROM (SELECT A.*, rownum as rn 
+	 					FROM (
+	 						SELECT rs.*, mem.name
+	 						FROM reserve rs, member mem
+	 						WHERE rs.memberno = mem.memberno
+                            AND rs.bshow='y'
+                            AND rs.paystate=1
+	 						ORDER BY rs.reserveno DESC
+	 					) A
+	 				) 
+		WHERE rn >= #{start} AND rn <= #{end}
+	]]>
+    </select>
+    
+    <!-- 게시글 목록(운동) -->
+    <select id="getReserveList1" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    <![CDATA[
+    	SELECT * FROM (SELECT A.*, rownum as rn 
+	 					FROM (
+	 						SELECT rs.*, mem.name
+	 						FROM reserve rs, member mem
+	 						WHERE rs.memberno = mem.memberno
+                            AND rs.pshow='y'
+                            AND rs.paystate=1
+	 						ORDER BY rs.reserveno DESC
+	 					) A
+	 				) 
+		WHERE rn >= #{start} AND rn <= #{end}
+	]]>
+    </select>
+    
+    <!-- 게시글 목록(심리) -->
+    <select id="getReserveList2" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    <![CDATA[
+    	SELECT * FROM (SELECT A.*, rownum as rn 
+	 					FROM (
+	 						SELECT rs.*, mem.name
+	 						FROM reserve rs, member mem
+	 						WHERE rs.memberno = mem.memberno
+                            AND rs.mshow='y'
+                            AND rs.paystate=1
+	 						ORDER BY rs.reserveno DESC
+	 					) A
+	 				) 
+		WHERE rn >= #{start} AND rn <= #{end}
+	]]>
+    </select>
+    
+    <!-- 회원정보 불러오기 -->
+    <select id="getCustomerList" parameterType="int" resultType="com.teampj.physicheck.dto.CustomerDTO">
+        SELECT mem.*, r.*
+		FROM member mem, reserve r
+		WHERE mem.memberno = r.memberno
+		AND r.reserveno=#{reserveNo}
+    </select>
+
+    <!-- [ 기초검사 insert] -->
+	<!-- 체질량 검사 -->
+	<insert id="bmiResultInsert" parameterType="com.teampj.physicheck.dto.BmiDTO">
+		INSERT INTO bmi(bmiNo, height, weight, bmi, bodyFat, bodyMuscle, bodyWater)
+		VALUES((SELECT NVL(MAX(${bmiNo}-1)+1, ${bmiNo}) FROM bmi), #{height}, #{weight}, #{bmi}, #{bodyFat}, #{bodyMuscle}, #{bodyWater})
+	</insert>
+	
+	<!-- 혈압 검사 -->
+	<insert id="pressureResultInsert" parameterType="com.teampj.physicheck.dto.PressureDTO">
+		INSERT INTO pressure(pressureNo, pressureHigh, pressureLow)
+		VALUES((SELECT NVL(MAX(${pressure_no}-1)+1, ${pressure_no}) FROM pressure), #{pressureHigh}, #{pressureLow})
+	</insert>
+	
+	<!-- 소변 검사 -->
+	<insert id="urineResultInsert" parameterType="com.teampj.physicheck.dto.UrineDTO">
+		INSERT INTO urine(urineNo, urineProtein, urineAcid, urineGlucose)
+		VALUES((SELECT NVL(MAX(${urine_no}-1)+1, ${urine_no}) FROM urine), #{urineProtein}, #{urineAcid}, #{urineGlucose})
+	</insert>
+	
+	<!-- 혈액 검사 -->
+	<insert id="bloodResultInsert" parameterType="com.teampj.physicheck.dto.BloodDTO">
+		INSERT INTO blood(bloodNo, redBloodCell, whiteBloodCell, bloodPlatelet, liverFunction, bloodGlucose)
+		VALUES((SELECT NVL(MAX(${bloodNo}-1)+1, ${bloodNo}) FROM blood), #{redBloodCell}, #{whiteBloodCell}, #{bloodPlatelet}, #{liverFunction}, #{bloodGlucose})
+	</insert>
+	
+	<!-- 기초 상위 테이블로 이동 -->
+	<insert id="BasicInsert" parameterType="com.teampj.physicheck.dto.BasicDTO">
+		INSERT INTO basic(basicNo, bmiNo, pressureNo, urineNo, bloodNo, testExpense, id)
+		VALUES(#{basicNo}, #{bmiNo}, #{pressureNo}, #{urineNo}, #{bloodNo}, #{testExpense}, #{id})
+	</insert>
+	
+	<!-- [ 운동검사 select ] -->
+	<!-- 심페지구력 검사 -->
+	<insert id="CardioEnduranceResultInsert" parameterType="com.teampj.physicheck.dto.CardioEnduranceDTO">
+		INSERT INTO CardioEndurance(cardioEnduranceNo, run3km, balkeProtocol, run3kmResult, balkeProtocolResult)
+		VALUES((SELECT NVL(MAX(${cardioEnduranceNo}), ${cardioEnduranceNo}) FROM CardioEndurance), #{run3km}, #{balkeProtocol}, #{run3kmResult}, #{balkeProtocolResult})
+	</insert>
+	
+	<!-- 유연성 검사 -->
+	<insert id="FlexibilityResultInsert" parameterType="com.teampj.physicheck.dto.FlexibilityDTO">
+		INSERT INTO Flexibility(flexibilityNo, forwardBending, bridge, forwardBendingResult, bridgeResult)
+		VALUES((SELECT NVL(MAX(${flexibilityNo}), ${flexibilityNo}) FROM Flexibility), #{forwardBending}, #{bridge}, #{forwardBendingResult}, #{bridgeResult})
+	</insert>
+	
+	<!-- 순발력 검사 -->
+	<insert id="AgilityResultInsert" parameterType="com.teampj.physicheck.dto.AgilityDTO">
+		INSERT INTO Agility(agilityNo, longJump, run50, longJumpResult, run50Result)
+		VALUES((SELECT NVL(MAX(${agilityNo}), ${agilityNo}) FROM Agility), #{longJump}, #{run50}, #{longJumpResult}, #{run50Result})
+	</insert>
+	
+	<!-- 근력 검사 -->
+	<insert id="MuscularPowerResultInsert" parameterType="com.teampj.physicheck.dto.MuscularPowerDTO">
+		INSERT INTO MuscularPower(muscularPowerNo, squirt, benchPress, squirtResult, benchPressResult)
+		VALUES((SELECT NVL(MAX(${muscularPower_no}), ${muscularPower_no}) FROM MuscularPower), #{squirt}, #{benchPress}, #{squirtResult}, #{benchPressResult})
+	</insert>
+	
+	<!-- 근지구력 검사 -->
+	<insert id="MuscularEnduranceResultInsert" parameterType="com.teampj.physicheck.dto.MuscularEnduranceDTO">
+		INSERT INTO MuscularEndurance(muscularEnduranceNo, sitUp, pushUp, sitUpResult, pushUpResult)
+		VALUES((SELECT NVL(MAX(${muscularEndurance_no}), ${muscularEndurance_no}) FROM MuscularEndurance), #{sitUp}, #{pushUp}, #{sitUpResult}, #{pushUpResult})
+	</insert>
+	
+	<!-- 민첩성 검사 -->
+	<insert id="QuicknessResultInsert" parameterType="com.teampj.physicheck.dto.QuicknessDTO">
+		INSERT INTO Quickness(quicknessNo, sideStep, burpeeTest, sideStepResult, burpeeTestResult)
+		VALUES((SELECT NVL(MAX(${quickness_no}), ${quickness_no}) FROM Quickness), #{sideStep}, #{burpeeTest}, #{sideStepResult}, #{burpeeTestResult})
+	</insert>
+	
+	<!-- 운동검사 -->
+	<insert id="PhysicalInsert" parameterType="com.teampj.physicheck.dto.PhysicalDTO">
+		INSERT INTO Physical(physicalNo, cardioEnduranceNo, flexibilityNo, agilityNo, muscularPowerNo, muscularEnduranceNo, quicknessNo, testExpense, id)
+		VALUES(#{physicalNo}, #{cardioEnduranceNo}, #{flexibilityNo}, #{agilityNo}, #{muscularPowerNo}, #{muscularEnduranceNo}, #{quicknessNo}, #{testExpense}, #{id})
+	</insert>
+	
+	
+	<!-- [ 심리검사 select ] -->
+	<!-- 심리검사 설문지 -->
+	<select id="getMentalSurveyResult" parameterType="Integer" resultType="com.teampj.physicheck.dto.MentalDTO">
+		SELECT m.*,
+		    (s1.answer1+s2.answer1+s3.answer1+s4.answer1) total1,
+		    (s1.answer2+s2.answer2+s3.answer2+s4.answer2) total2,
+		    (s1.answer3+s2.answer3+s3.answer3+s4.answer3) total3,
+		    (s1.answer4+s2.answer4+s3.answer4+s4.answer4) total4,
+		    (s1.answer5+s2.answer5+s3.answer5+s4.answer5) total5
+		FROM mental m, survey1 s1, survey2 s2, survey3 s3, survey4 s4
+		WHERE m.surveyNo = s1.survey1no
+		AND m.surveyNo = s2.survey2no
+		AND m.surveyNo = s3.survey3no
+		AND m.surveyNo = s4.survey4no
+		AND m.surveyNo = #{mentalNo}
+	</select>
+	
+	<!-- 심리검사 설문지 > 그래프용 -->
+	<select id="getMentalSurveyResult2" parameterType="Integer" resultType="com.teampj.physicheck.dto.MentalDTO">
+		SELECT 
+		    (s1.answer1+s2.answer1+s3.answer1+s4.answer1) total1,
+		    (s1.answer2+s2.answer2+s3.answer2+s4.answer2) total2,
+		    (s1.answer3+s2.answer3+s3.answer3+s4.answer3) total3,
+		    (s1.answer4+s2.answer4+s3.answer4+s4.answer4) total4,
+		    (s1.answer5+s2.answer5+s3.answer5+s4.answer5) total5
+		FROM mental m, survey1 s1, survey2 s2, survey3 s3, survey4 s4
+		WHERE m.surveyNo = s1.survey1no
+		AND m.surveyNo = s2.survey2no
+		AND m.surveyNo = s3.survey3no
+		AND m.surveyNo = s4.survey4no
+		AND m.surveyNo = #{mentalNo}
+	</select>
+	
+	<!-- 심리검사 소견서 입력 -->
+	<update id="mentalResultInsert" parameterType="com.teampj.physicheck.dto.MentalDTO">
+		UPDATE mental SET comments=#{comments}
+		WHERE mentalNo=#{mentalNo}
+	</update>
+	
+	<!-- [검사 결과 insert 후 show='y' -> show='n'으로 변경] -->
+	<!-- 기초검사 -->
+	<update id="showUpdate" parameterType="int">
+		UPDATE reserve SET bshow='n'
+		WHERE reserveNo=#{reserveNo}
+	</update>
+	
+	<update id="showUpdate1" parameterType="int">
+		UPDATE reserve SET pshow='n'
+		WHERE reserveNo=#{reserveNo}
+	</update>
+	
+	<update id="showUpdate2" parameterType="int">
+		UPDATE reserve SET mshow='n'
+		WHERE reserveNo=#{reserveNo}
+	</update>
+	
+	
+	<!-- 운동검사 정보 가져오기 -->
+	<!-- 심폐지구력 가져오기 -->
+	<select id="getPhysicalCardio" parameterType="int" resultType="com.teampj.physicheck.dto.CardioEnduranceDTO">
+		SELECT * FROM cardioEndurance WHERE cardioEnduranceNo = #{reserveNo}
+	</select>
+	
+	<!-- 유연성 가져오기-->
+	<select id="getPhysicalFlexibility" parameterType="int" resultType="com.teampj.physicheck.dto.FlexibilityDTO">
+		SELECT * FROM flexibility WHERE flexibilityNo = #{reserveNo}
+	</select>
+	
+	<!-- 순발력 가져오기 -->
+	<select id="getPhysicalAgility" parameterType="int" resultType="com.teampj.physicheck.dto.AgilityDTO">
+		SELECT * FROM agility WHERE agilityNo = #{reserveNo}
+	</select>
+	
+	<!-- 근려 가져오기 -->
+	<select id="getPhysicalMuscularPower" parameterType="int" resultType="com.teampj.physicheck.dto.MuscularPowerDTO">
+		SELECT * FROM muscularPower WHERE muscularPowerNo = #{reserveNo}
+	</select>
+	
+	<!-- 근지구력 가져오기 -->
+	<select id="getPhysicalMuscularEndurance" parameterType="int" resultType="com.teampj.physicheck.dto.MuscularEnduranceDTO">
+		SELECT * FROM muscularEndurance WHERE muscularEnduranceNo = #{reserveNo}
+	</select>
+	
+	<!-- 민첩성 가져오기 -->
+	<select id="getPhysicalQuickness" parameterType="int" resultType="com.teampj.physicheck.dto.QuicknessDTO">
+		SELECT * FROM quickness WHERE quicknessNo = #{reserveNo}
+	</select>
+	
+	<!-- 운동검사 수정 -->
+	<!-- 심폐지구력 -->
+	<update id="CardioEnduranceResultUpdate" parameterType="java.util.Map">
+		UPDATE CardioEndurance SET run3km = #{dto1.run3km},
+								   balkeProtocol = #{dto1.balkeProtocol},
+								   run3kmResult = #{dto1.run3kmResult},
+								   balkeProtocolResult = #{dto1.balkeProtocolResult}
+								WHERE cardioEnduranceNo = #{reserveNo}   
+	</update>
+	
+	<!-- 유연성 -->
+	<update id="FlexibilityResultUpdate" parameterType="java.util.Map">
+		UPDATE flexibility SET forwardBending = #{dto2.forwardBending},
+								   bridge = #{dto2.bridge},
+								   forwardBendingResult = #{dto2.forwardBendingResult},
+								   bridgeResult = #{dto2.bridgeResult}
+								WHERE flexibilityNo = #{reserveNo}   
+	</update>
+	
+	<!-- 순발력 -->
+	<update id="AgilityResultUpdate" parameterType="java.util.Map">
+		UPDATE agility SET longJump = #{dto3.longJump},
+								   run50 = #{dto3.run50},
+								   longJumpResult = #{dto3.longJumpResult},
+								   run50Result = #{dto3.run50Result}
+								WHERE agilityNo = #{reserveNo}   
+	</update>
+	
+	<!-- 근력 -->
+	<update id="MuscularPowerResultUpdate" parameterType="java.util.Map">
+		UPDATE muscularPower SET squirt = #{dto4.squirt},
+								   benchPress = #{dto4.benchPress},
+								   squirtResult = #{dto4.squirtResult},
+								   benchPressResult = #{dto4.benchPressResult}
+								WHERE muscularPowerNo = #{reserveNo}   
+	</update>
+	
+	<!-- 근지구력 -->
+	<update id="MuscularEnduranceResultUpdate" parameterType="java.util.Map">
+		UPDATE muscularEndurance SET sitUp = #{dto5.sitUp},
+								   pushUp = #{dto5.pushUp},
+								   sitUpResult = #{dto5.sitUpResult},
+								   pushUpResult = #{dto5.pushUpResult}
+								WHERE muscularEnduranceNo = #{reserveNo}   
+	</update>
+	
+	<!-- 민첩성 -->
+	<update id="QuicknessResultUpdate" parameterType="java.util.Map">
+		UPDATE quickness SET sideStep = #{dto6.sideStep},
+								   burpeeTest = #{dto6.burpeeTest},
+								   sideStepResult = #{dto6.sideStepResult},
+								   burpeeTestResult = #{dto6.burpeeTestResult}
+								WHERE quicknessNo = #{reserveNo}   
+	</update>
+	
+	<!-- 검진기록 업데이트 -->
+	<update id="checksUpdate" parameterType="Integer">
+		UPDATE member
+		   SET checks = 'Y'
+		 WHERE memberNo = #{memberNo}
+	</update>
+	
+</mapper>

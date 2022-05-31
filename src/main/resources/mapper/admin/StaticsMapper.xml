@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.teampj.physicheck.dao.StaticsMapper">
+	<!-- 통계 - 성별 -->
+	<select id="statics1" parameterType="int" resultType="com.teampj.physicheck.dto.Statics1DTO">
+		<![CDATA[
+			SELECT COUNT(r.reserveno) total, m.gender
+			FROM reserve r, member m
+			WHERE r.memberNo=m.memberNo
+			AND r.paystate = 1
+			GROUP BY m.gender
+			ORDER BY total DESC
+		]]>
+	</select>
+	
+	<!-- 통계 - 연령별 -->
+	<select id="statics2" parameterType="int" resultType="com.teampj.physicheck.dto.Statics2DTO">
+		<![CDATA[
+		SELECT COUNT(A.generation) total, A.generation
+		FROM(
+				SELECT CASE WHEN TRUNC((m.age/10),0) = '1' THEN '1teens'
+							WHEN TRUNC((m.age/10),0) = '2' THEN '2twenties'
+							WHEN TRUNC((m.age/10),0) = '3' THEN '3thirties'
+							WHEN TRUNC((m.age/10),0) = '4' THEN '4fourties'
+							WHEN TRUNC((m.age/10),0) = '5' THEN '5fifties'
+							ELSE '6senior'
+						   END AS generation
+				FROM reserve r, member m
+				WHERE r.memberNo=m.memberNo
+				  AND r.paystate = 1
+			) A
+		GROUP BY A.generation
+		ORDER BY generation ASC
+		]]>
+	</select>	
+</mapper>

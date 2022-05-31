@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.vue.dao.ReviewVueMapper">
+    <!-- 리뷰 갯수 -->
+ 	<select id="reviewCnt"  resultType="Integer">
+       select COUNT(*) as cnt 
+       FROM review 
+    </select>
+    
+	<!-- 조회수 증가 -->
+	<update id="plusReadCnt" parameterType="com.teampj.physicheck.dto.ReviewDTO">
+		UPDATE review 
+		SET readCnt=(readCnt+1) 
+		WHERE reviewNo =#{reviewNo}
+	</update>
+	
+    <!-- 리뷰 목록 -->
+    <select id="getVueReviewList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReviewDTO">
+		SELECT * 
+		FROM review 
+		ORDER BY reviewNo DESC
+    </select>
+
+    <!-- 리뷰 상세 -->
+    <select id="vueReviewDetail" parameterType="Integer" resultType="com.teampj.physicheck.dto.ReviewDTO">
+		SELECT * 
+		FROM review 
+		WHERE reviewNo = #{id}
+    </select>
+       
+	<!-- 리뷰 등록 -->
+	<insert id="vueReviewInsert" parameterType="com.teampj.physicheck.dto.ReviewDTO">
+		INSERT INTO review(reviewNo, content, starPoint, reserveNo, memberNo) 
+  		VALUES((SELECT NVL(MAX(reviewNo)+1,1) FROM review),#{content},#{starPoint}, #{reserveNo}, #{memberNo})
+	</insert>
+
+	<!-- 리뷰 수정 -->
+	<update id="vueReviewEdit" parameterType="com.teampj.physicheck.dto.ReviewDTO">
+		UPDATE review
+		SET starPoint=#{starPoint}, content=#{content}
+		WHERE reviewNo=#{reviewNo}
+	</update>
+
+	<!-- 리뷰 삭제 -->
+	<delete id="vueReviewDelete" parameterType="com.teampj.physicheck.dto.ReviewDTO">
+		DELETE 
+		FROM review 
+		WHERE reviewNo=#{reviewNo}
+	</delete>   
+</mapper>

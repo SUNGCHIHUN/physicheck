@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.dao.MemberInfoMapper">
+
+    <!-- 회원정보 가져오기 -->
+    <select id="getCustomerDetail" parameterType="String" resultType="com.teampj.physicheck.dto.CustomerDTO">
+        SELECT * FROM member WHERE id=#{id}
+    </select>
+
+    <!-- 회원정보 수정 -->
+    <update id="updateCustomer" parameterType="com.teampj.physicheck.dto.CustomerDTO">
+        UPDATE member SET password=#{password}, name=#{name}, address=#{address}, tel=#{tel}, email=#{email} WHERE id=#{id}
+    </update>
+    
+    <!-- 회원 탈퇴 처리 -->
+	<delete id="deleteCustomer" parameterType="String">
+  		DELETE FROM member WHERE id=#{strId}
+  	</delete>
+  	
+	<!-- 회원 예약하기 > 달력 가져오기 -->
+	<select id="timeList" parameterType="String" resultType="Integer">
+        select COUNT(*) as cnt FROM reserve where reserveDate = #{date}
+    </select>
+    
+    <!-- 예약하기 버튼  -->
+    <!-- 기초검사만 하는 경우 -->
+    <insert id="reserveBtn1" parameterType="com.teampj.physicheck.dto.ReserveDTO">
+   		 insert into reserve(reserveNo, memberNo, reserveDate, basicNo)
+   	 	  values((SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve), #{memberNo}, #{reserveDate}, (SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve))
+    </insert>
+    
+    <!-- 예약하기 버튼  -->
+    <!-- 기초검사, 운동검사 -->
+    <insert id="reserveBtn2" parameterType="com.teampj.physicheck.dto.ReserveDTO">
+   		 insert into reserve(reserveNo, memberNo, reserveDate, basicNo, physicalNo)
+   	 	 values((SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve), #{memberNo}, #{reserveDate}, (SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve), (SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve))
+    </insert>
+    
+    <!-- 예약하기 버튼  -->
+    <!-- 기초검사, 심리검사 -->
+    <insert id="reserveBtn3" parameterType="com.teampj.physicheck.dto.ReserveDTO">
+   		 insert into reserve(reserveNo, memberNo, reserveDate, basicNo, mentalNo)
+   	 	  values((SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve), #{memberNo}, #{reserveDate}, (SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve), (SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve))
+    </insert>
+    
+    <!-- 예약하기 버튼  -->
+    <!-- 기초검사, 운동검사, 심리검사 -->
+    <insert id="reserveBtn4" parameterType="com.teampj.physicheck.dto.ReserveDTO">
+   		 insert into reserve(reserveNo, memberNo, reserveDate, basicNo, physicalNo, mentalNo)
+   	 	  values((SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve), #{memberNo}, #{reserveDate}, (SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve), (SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve), (SELECT NVL(MAX(reserveNo) + 1, 1) FROM reserve))
+    </insert>
+    
+    <!-- 예약리스트 갯수 -->
+    <select id="reserveCnt" parameterType="Integer" resultType="Integer">
+       select COUNT(*) as cnt FROM reserve WHERE memberNo = #{memberNo} 
+    </select>
+    
+    <!-- 예약리스트 가져오기 -->
+	<select id="reserveList" parameterType="Integer" resultType="com.teampj.physicheck.dto.ReserveDTO">
+		select * from ( 
+                SELECT A.* , rownum as rn 
+                FROM (
+       select reserveNo, memberNo, reserveDate, basicNo, physicalNo, mentalNo, payState from reserve where memberNo = #{memberNo}
+       ORDER BY reserveNo DESC
+        ) A 
+        )                 
+        WHERE rn BETWEEN #{start} AND #{end}
+    </select>
+    
+    <!-- 예약상세 가져오기 -->
+	<select id="reserveInfo" parameterType="Integer" resultType="com.teampj.physicheck.dto.ReserveDTO">
+		select reserveNo, memberNo, reserveDate, basicNo, physicalNo, mentalNo, payState  from reserve              
+        WHERE reserveNo = #{reserveNo}
+    </select>
+    
+    <!-- 예약 취소 -->
+    <delete id="reserveCancelBtn" parameterType="Integer" >
+    	DELETE FROM reserve WHERE reserveNo = #{reserveNo}
+    </delete>
+    <!-- 게시판 갯수 가져오기 -->
+    <select id="noticeCnt"  resultType="Integer">
+       select COUNT(*) as cnt FROM notice 
+    </select>
+    
+    <!-- 게시판 리스트 가져오기 -->
+    <select id="noticeList" parameterType="Integer" resultType="com.teampj.physicheck.dto.NoticeDTO">
+       select * from ( 
+                SELECT A.* , rownum as rn 
+                FROM (
+                SELECT noticeNo, title, content, writer, inDate, readCnt
+                FROM notice
+                ORDER BY indate DESC
+                ) A 
+                )                 
+                WHERE rn BETWEEN #{start} AND #{end}
+    </select>
+    
+    <!-- 게시판 상세 가져오기 -->
+    <select id="noticeInfo" parameterType="Integer" resultType="com.teampj.physicheck.dto.NoticeDTO">
+      SELECT * FROM notice WHERE noticeNo = #{num}
+    </select>
+    
+    <!-- 게시판 조회수 증가 -->
+    <update id="plusReadCnt" parameterType="Integer" >
+    	UPDATE notice SET readCnt = (readCnt + 1) 
+					WHERE noticeNo = #{num}
+    </update>
+    
+    <!-- 게시판 검색 갯수 -->
+     <select id="searchCnt"  parameterType="String" resultType="Integer">
+       <![CDATA[
+       SELECT COUNT(*) as cnt FROM notice WHERE title LIKE '%'||#{content}||'%'
+       ]]>
+    </select>
+    
+    <!-- 게시판 검색 리스트 -->
+    <select id="searchNoticeList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.NoticeDTO">
+    <![CDATA[
+       select * from ( 
+                SELECT A.* , rownum as rn 
+                FROM (
+                SELECT noticeNo, title, content, writer, inDate, readCnt
+                FROM notice
+                WHERE title LIKE '%'||#{content}||'%'
+                ORDER BY indate DESC
+                ) A 
+                )                 
+                WHERE rn BETWEEN #{start} AND #{end}
+                  ]]>
+    </select>
+    
+    <!-- 리뷰 갯수 -->
+ 	<select id="reviewCnt"  resultType="Integer">
+       select COUNT(*) as cnt FROM review 
+    </select>
+    
+    <!-- 리뷰 리스트 -->
+     <select id="reviewList" parameterType="Integer" resultType="com.teampj.physicheck.dto.ReviewDTO">
+       select * from ( 
+                SELECT A.* , rownum as rn 
+                FROM (
+                SELECT reviewNo, content, starPoint, inDate, reserveNo
+                FROM review
+                ORDER BY reviewNo DESC
+                ) A 
+                )                 
+                WHERE rn BETWEEN #{start} AND #{end}
+    </select>
+    
+    <!-- 리뷰 상세 -->
+    <select id="reviewInfo" parameterType="String" resultType="com.teampj.physicheck.dto.ReviewDTO">
+      SELECT * FROM review WHERE reviewNo = #{reviewNo}
+    </select>
+    
+    <!-- 리뷰 등록 버튼 -->
+    <insert id="reviewAdd" parameterType="com.teampj.physicheck.dto.ReviewDTO">
+   		 insert into review(reviewNo, content, starPoint, reserveNo, memberNo)
+   	 	  values((SELECT NVL(MAX(reviewNo) + 1, 1) FROM review), #{content}, #{starPoint}, #{reserveNo}, #{memberNo})
+    </insert>
+    
+    <!-- 리뷰 등록 페이지 -->
+    <select id="reviewAddPage" parameterType="Integer" resultType="Integer">
+      select reserveNo From reserve where memberNo = #{memberNo} and reviewState = 0
+    </select>
+    
+    <!-- 리뷰 등록후 reserve TBL에서 reviewstate update -->
+    <update id="reviewAddUpdate" parameterType="Integer" >
+    	UPDATE reserve SET reviewState = 1
+					WHERE reserveNo = #{reserveNo}
+    </update>
+    
+    <!-- 리뷰 삭제 -->
+    <delete id="reviewDelete" parameterType="Integer">
+    	DELETE FROM review WHERE reviewNo = #{reviewNo}
+    </delete>
+    
+    <!-- 리뷰 삭제 후  reviewstate update -->
+    <update id="reviewDeleteUpdate" parameterType="Integer" >
+    	UPDATE reserve SET reviewState = 0
+					WHERE reserveNo = #{reserveNo}
+    </update>
+    
+    <!-- 리뷰 수정 -->
+     <update id="reviewModifyAction" parameterType="java.util.Map" >
+    	UPDATE review SET starPoint = #{starPoint},
+    					  content = #{content}
+					WHERE reviewNo = #{reviewNo}
+    </update>
+    
+    <!-- 리뷰 검색 갯수 -->
+     <select id="searchReviewCnt" parameterType="String" resultType="Integer">
+       <![CDATA[
+       SELECT COUNT(*) as cnt FROM review WHERE content LIKE '%'||#{content}||'%'
+       ]]>
+    </select>
+    
+    <!-- 리뷰 검색 리스트 -->
+    <select id="searchReviewList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReviewDTO">
+    <![CDATA[
+       select * from ( 
+                SELECT A.* , rownum as rn 
+                FROM (
+                SELECT reviewNo, content, starPoint, inDate, reserveNo
+                FROM review
+                WHERE content LIKE '%'||#{content}||'%'
+                ORDER BY indate DESC
+                ) A 
+                )                 
+                WHERE rn BETWEEN #{start} AND #{end}
+                  ]]>
+    </select>
+    
+    <!-- 결제 후 상태 업데이트 -->
+    <update id="paidState" parameterType="String" >
+    	UPDATE reserve SET payState = 1
+					WHERE reserveNo = #{reserveNo}
+    </update>
+	
+	<!-- 결제후 결제 테이블 생성  -->
+	<insert id="paymentAdd" parameterType="java.util.Map">
+   		 insert into payment(paymentNo, paymentWay, paymentCost, reserveNo)
+   	 	  values((SELECT NVL(MAX(paymentNo) + 1, 1) FROM payment), #{paymentWay}, #{paymentCost}, #{reserveNo})
+    </insert>
+    
+
+    <!-- 환불처리  -->
+	<update id="paidStateRefund" parameterType="String" >
+    	UPDATE reserve SET payState = 2
+					WHERE reserveNo = #{reserveNo}
+    </update>
+
+	<!-- select 제외 모든 crud는 resultType이 숫자 -->
+    <insert id="setMentalInsert1" parameterType="com.teampj.physicheck.dto.Survey1DTO">
+		 INSERT INTO SURVEY1(SURVEY1NO, ANSWER1, ANSWER2, ANSWER3, ANSWER4, ANSWER5) 
+		 VALUES((SELECT NVL(MAX(SURVEY1NO)+1,1) FROM SURVEY1), #{answer1}, #{answer2}, #{answer3}, #{answer4}, #{answer5})
+	</insert>
+
+    <insert id="setMentalInsert2" parameterType="com.teampj.physicheck.dto.Survey2DTO">
+		 INSERT INTO SURVEY2(SURVEY2NO, ANSWER1, ANSWER2, ANSWER3, ANSWER4, ANSWER5) 
+		 VALUES((SELECT NVL(MAX(SURVEY2NO)+1,1) FROM SURVEY2), #{answer1}, #{answer2}, #{answer3}, #{answer4}, #{answer5})
+	</insert>
+	
+    <insert id="setMentalInsert3" parameterType="com.teampj.physicheck.dto.Survey3DTO">
+		 INSERT INTO SURVEY3(SURVEY3NO, ANSWER1, ANSWER2, ANSWER3, ANSWER4, ANSWER5) 
+		 VALUES((SELECT NVL(MAX(SURVEY3NO)+1,1) FROM SURVEY3), #{answer1}, #{answer2}, #{answer3}, #{answer4}, #{answer5})
+	</insert>
+	
+    <insert id="setMentalInsert4" parameterType="com.teampj.physicheck.dto.Survey4DTO">
+		 INSERT INTO SURVEY4(SURVEY4NO, ANSWER1, ANSWER2, ANSWER3, ANSWER4, ANSWER5) 
+		 VALUES((SELECT NVL(MAX(SURVEY4NO)+1,1) FROM SURVEY4), #{answer1}, #{answer2}, #{answer3}, #{answer4}, #{answer5})
+	</insert>
+	
+	
+<!--  - - - - - - - - - - Result - - - - - - - - - - - -->
+<!-- BasicResult -->
+	<select id="getPressureResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.PressureDTO">
+        SELECT PRESSUREHIGH, PRESSURELOW
+        FROM PRESSURE
+        WHERE PRESSURENO='2'
+	</select>
+
+	<select id="getUrineResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.UrineDTO">
+        SELECT URINEPROTEIN, URINEACID, URINEGLUCOSE
+        FROM URINE
+        WHERE URINENO='2'
+	</select>	
+
+	<select id="getBmiResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.BmiDTO">
+        SELECT HEIGHT, WEIGHT, BMI, BODYFAT, BODYMUSCLE, BODYWATER
+        FROM BMI
+        WHERE BMINO='2'        
+	</select>
+	
+	<!--   !!!   상위테이블(Mental)에 하위 테이블(Survey1~4) 값 넘겨야함. -->
+	
+	
+	
+<!-- MentalResult -->
+	<select id="getMentalResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.MentalDTO">
+        SELECT SURVEY1NO, SURVEY2NO, SURVEY3NO, SURVEY4NO, TESTCODE, COMMENTS
+        FROM MENTAL
+        WHERE MENTALNO='2'
+	</select>
+	
+	
+	
+<!-- PhysicalResult -->
+	<select id="getCardioEnduranceResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.CardioEnduranceDTO">
+        SELECT BENCHSTEPPING, BALKEPROTOCOL
+        FROM CARDIOENDURANCE
+        WHERE CARDIOENDURANCENO='2'
+	</select>	
+
+	<select id="getFlexibilityResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.FlexibilityDTO">
+        SELECT FORWARDBENDING, SHOULDERMOBILITY
+        FROM FLEXIBILITY
+        WHERE FLEXIBILITYNO='2'
+	</select>
+	
+	<select id="getQuicknessResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.QuicknessDTO">
+        SELECT SIDESTEP, BOOMERANGRUN, WHOLERESPONSE
+        FROM QUICKNESS
+        WHERE QUICKNESSNO='2'
+	</select>	
+	
+	<select id="getMuscularPowerResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.MuscularPowerDTO">
+        SELECT STRENGTH, BENCHPRESS, BACKMUSCLE, LEGPRESS
+        FROM MUSCULARPOWER
+        WHERE MUSCULARPOWERNO='2'
+	</select>	
+	
+	<select id="getMuscularEnduranceResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.MuscularEnduranceDTO">
+        SELECT SITUP, PUSHUP, BURPEETEST, HALFSQUATJUMP
+        FROM MUSCULARENDURANCE
+        WHERE MUSCULARENDURANCENO='2'
+	</select>
+	
+	<select id="getAgilityResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.AgilityDTO">
+        SELECT LONGJUMP, RUN50	
+        FROM AGILITY
+        WHERE AGILITYNO='2'
+	</select>
+	
+				
+	<!--   !!!   상위테이블(Physical)에 하위 테이블(Survey1~4) 값 넘겨야함. -->
+	
+	 <!-- 의사_담당회원정보 가져오기 -->
+    <select id="docCustomerDetail" parameterType="int" resultType="com.teampj.physicheck.dto.CustomerDTO">
+    <![CDATA[
+        select * from member 
+            where memberNo = (select memberNo from reserve where reserveNo = #{reserveNo})
+        ]]>
+    </select>
+	
+</mapper>

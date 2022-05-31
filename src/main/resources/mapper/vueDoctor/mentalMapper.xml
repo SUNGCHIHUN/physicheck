@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.vue.dao.MentalMapper">
+
+	<!-- ===============================[담당회원정보]==================================== -->
+    <!-- 담당회원정보목록(기본) -->
+    <select id="getVueReserveList2" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    	SELECT *
+    		FROM reserve rs, member mem
+    		WHERE rs.memberno = mem.memberno
+    		AND rs.paystate=1
+    		AND rs.mshow='y'
+    		ORDER BY rs.reserveno DESC
+    </select>
+    
+    <!-- 심리검사결과 조회 -->
+	<select id="getVueMentalInfo" parameterType="Integer" resultType="com.teampj.physicheck.vue.vo.MentalVO">
+		SELECT m.*,
+		    (s1.answer1+s2.answer1+s3.answer1+s4.answer1) total1,
+		    (s1.answer2+s2.answer2+s3.answer2+s4.answer2) total2,
+		    (s1.answer3+s2.answer3+s3.answer3+s4.answer3) total3,
+		    (s1.answer4+s2.answer4+s3.answer4+s4.answer4) total4,
+		    (s1.answer5+s2.answer5+s3.answer5+s4.answer5) total5
+		FROM mental m, survey1 s1, survey2 s2, survey3 s3, survey4 s4
+		WHERE m.mentalno = s1.survey1no
+		AND m.mentalno = s2.survey2no
+		AND m.mentalno = s3.survey3no
+		AND m.mentalno = s4.survey4no
+		AND m.mentalno=#{reserveNo}
+	</select>
+	
+	<!-- 심리검사 소견서 입력 -->
+	<update id="mentalVueResultInsert" parameterType="com.teampj.physicheck.dto.MentalDTO">
+		UPDATE mental SET comments=#{comments}
+		WHERE mentalNo=#{reserveNo}
+	</update>
+	
+	<!-- 등록시 목록에서 가리기 -->
+	<update id="showUpdateVue2" parameterType="int">
+		UPDATE reserve SET mshow='n'
+		WHERE reserveNo=#{reserveNo}
+	</update>
+	
+	<!-- 담당회원결과등록목록(기본) -->
+   	<select id="getVueMemberResultInfo2" resultType="com.teampj.physicheck.dto.ReserveDTO">
+    	SELECT *
+    		FROM reserve rs, member mem
+    		WHERE rs.memberno = mem.memberno
+    		AND rs.paystate=1
+    		AND rs.mshow='n'
+    		ORDER BY rs.reserveno DESC
+   	</select>
+    
+</mapper>

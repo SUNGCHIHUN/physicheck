@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.teampj.physicheck.dao.ReviewMapper">
+	<!-- 리뷰 - 리뷰 수 -->
+<select id="reviewCnt" resultType="int">
+	SELECT COUNT(*) as cnt FROM review
+</select>
+
+	<!-- 리뷰 - 조회 -->
+<select id="review" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReviewDTO">
+	<![CDATA[
+  	SELECT * FROM (SELECT A.*, rownum as rn 
+  					FROM (
+  						SELECT reviewNo, content, reserveNo, starPoint, inDate
+  							FROM review
+  						ORDER BY reviewNo DESC
+  					) A
+  				) 
+  			WHERE rn >= #{start} AND rn <= #{end}
+  	]]>
+</select>
+	<!-- 리뷰 - 별점 -->
+<update id="starPoint" parameterType="com.teampj.physicheck.dto.ReviewDTO">
+	UPDATE review SET starPoint WHERE reviewNo =#{reviewNo} 
+</update>
+	<!-- 리뷰 - 삭제 -->
+<delete id="reviewDelete" parameterType="com.teampj.physicheck.dto.ReviewDTO">
+	DELETE FROM review WHERE reviewNo=#{reviewNo}
+</delete>
+
+	<!-- 리뷰 - 검색수 -->
+<select id="searchCnt" parameterType="String" resultType="Integer">
+	<![CDATA[
+	SELECT COUNT(*) as cnt FROM review WHERE content LIKE '%'||#{content}||'%'
+	]]>
+</select>
+	
+	<!-- 리뷰 - 검색목록 -->
+<select id="reviewSearch" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReviewDTO">
+    <![CDATA[
+       select * from ( 
+                SELECT A.* , rownum as rn 
+                FROM (
+                SELECT reviewNo, content, starPoint, inDate, reserveNo
+                FROM review
+                WHERE content LIKE '%'||#{content}||'%'
+                ORDER BY indate DESC
+                ) A 
+                )                 
+                WHERE rn BETWEEN #{start} AND #{end}
+     ]]>
+</select>
+</mapper>

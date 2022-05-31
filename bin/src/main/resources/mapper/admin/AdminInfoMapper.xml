@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.dao.AdminInfoMapper">
+
+	<!-- 회원 전체수 조회 -->
+	<select id="getMemberTotal" parameterType="String" resultType="Integer">
+		SELECT COUNT(*)
+		  FROM member
+		 WHERE authority LIKE 'ROLE_MEMBER'
+		 <if test="keyword != null">
+		   AND (name LIKE '%'|| #{keyword} ||'%'
+		        OR memberNo LIKE #{keyword})
+		</if>
+	</select>
+
+	<!-- 회원 리스트 조회 -->
+    <select id="getMemberList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.MemberDTO">
+        SELECT *
+		  FROM (
+		        SELECT A.*, ROWNUM as rn
+		          FROM (SELECT *
+		                  FROM member
+		                 WHERE 1=1
+		                   AND authority LIKE 'ROLE_MEMBER'
+						<if test="keyword != null">
+						   AND	 (name LIKE '%'|| #{keyword} ||'%'
+						        OR memberNo LIKE #{keyword})
+						</if>
+		                 ORDER BY memberNo DESC
+		                ) A
+		        )
+		 WHERE rn BETWEEN #{start} AND #{end}
+    </select>
+
+	<!-- 회원 승인 -->
+	<update id="confirmRegist" parameterType="Integer">
+		UPDATE member
+		   SET able = 'Y',
+		       enabled = 1
+		 WHERE memberNo = #{memberNo}
+	</update>
+
+	<!-- 회원 삭제 -->
+	<update id="deleteMember" parameterType="Integer">
+		UPDATE member
+		   SET able = 'N',
+		   outDate = sysdate
+		 WHERE memberNo = #{memberNo}
+	</update>
+
+	<!-- 의료진 전체수 조회 -->
+	<select id="getDoctorTotal" resultType="Integer">
+		SELECT COUNT(*) 
+		  FROM member
+		 WHERE authority LIKE 'ROLE_DOCTOR'
+		 <if test="keyword != null">
+		   AND	 (name LIKE '%'|| #{keyword} ||'%'
+		        OR memberNo LIKE #{keyword})
+		 </if>
+	</select>
+
+	<!-- 의료진 리스트 조회 -->
+    <select id="getDoctorList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.DoctorDTO">
+        SELECT *
+		  FROM (
+		        SELECT A.*, ROWNUM as rn
+		          FROM (SELECT *
+		                  FROM member
+		                 WHERE 1=1
+		                   AND authority LIKE 'ROLE_DOCTOR'
+		                 <if test="keyword != null">
+						   AND (name LIKE '%'|| #{keyword} ||'%'
+						       OR memberNo LIKE #{keyword})
+						</if>
+		                 ORDER BY memberNo DESC
+		                ) A
+		        )
+		 WHERE rn BETWEEN #{start} AND #{end}
+    </select>
+    
+    <!-- 의료진 등록 -->
+    <insert id="registDoctor" parameterType="com.teampj.physicheck.dto.DoctorDTO">
+    	INSERT INTO member(memberNo, id, password, name, examination, gender, jumin1, jumin2, tel, email, address, enabled, authority)
+    	VALUES(member_seq.nextval, #{id}, #{password}, #{name}, #{examination}, #{gender}, #{jumin1}, #{jumin2}, #{tel}, #{email}, #{address}, 1, 'ROLE_DOCTOR')
+    </insert>
+    
+    <!-- 의료진  정보 가져오기 -->
+    <select id="getDoctorDetail" parameterType="Integer" resultType="com.teampj.physicheck.dto.DoctorDTO">
+    	SELECT * FROM member
+    	 WHERE memberNo = #{doctorNo}
+    </select>
+    
+    <!-- 의료진 검진과목 수정 -->
+    <update id="modifyExamination" parameterType="com.teampj.physicheck.dto.DoctorDTO">
+    	UPDATE member
+    	   SET examination = #{examination}
+    	 WHERE memberNo = #{memberNo}
+    </update>
+    
+    <!-- 의료진 삭제 -->
+    <update id="deleteDoctor" parameterType="Integer">
+    	UPDATE member
+		   SET able = 'N',
+		       outDate = sysdate
+		 WHERE memberNo = #{doctorNo}
+    </update>
+    
+    <!-- 총매출(연도별) 총 개수 -->
+    <select id="getTotalSalesCount" resultType="Integer">
+    	SELECT COUNT(*)
+    	  FROM totalSales
+    </select>
+    
+    <!-- 총매출(연도별)-->
+    <select id="getTotalSales" resultType="com.teampj.physicheck.dto.SalesDTO">
+		SELECT paymentYear
+		     , paymentWay
+		     , total 
+		  FROM totalSales
+    </select>
+    
+    <!-- 총매출(월별)-->
+    <select id="getTotalSalesMonth" parameterType="Integer" resultType="com.teampj.physicheck.dto.SalesDTO">
+		SELECT paymentYear
+		     , paymentMonth
+		     , paymentWay
+		     , total 
+		  FROM totalSalesMonth
+		 WHERE paymentYear = #{year} 
+    </select>
+    
+    <!-- 총매출(일별)-->
+    <select id="getTotalSalesDay" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.SalesDTO">
+		SELECT paymentYear
+		     , paymentMonth
+		     , paymentDay
+		     , paymentWay
+		     , total
+		  FROM totalSalesDay
+		 WHERE paymentYear = #{year}
+		   AND paymentMonth = #{month}
+    </select>
+    
+    <!-- 의료진 실적 조회(연도별) -->
+    <select id="getPerformance" resultType="com.teampj.physicheck.dto.PerformanceDTO">
+		SELECT performanceYear
+		     , memberNo
+		     , name
+		     , gender
+		     , examination
+		     , examTotal
+		  FROM performance
+    </select>
+    
+    <!-- 의료진 실적 조회(특정 연도별) -->
+    <select id="getPerformanceYear" parameterType="Integer" resultType="com.teampj.physicheck.dto.PerformanceDTO">
+		SELECT performanceYear
+		     , memberNo
+		     , name
+		     , gender
+		     , examination
+		     , examTotal
+		  FROM performance
+		 WHERE performanceYear = #{year}
+    </select>
+    
+    <!-- 의료진 실적 조회(월별) -->
+    <select id="getPerformanceMonth" parameterType="Integer" resultType="com.teampj.physicheck.dto.PerformanceDTO">
+		SELECT performanceYear
+		     , performanceMonth
+		     , memberNo
+		     , name
+		     , gender
+		     , examination
+		     , examTotal
+		  FROM performanceMonth
+		 WHERE performanceYear = #{year}
+    </select>
+    
+    <!-- 의료진 실적 조회(일별) -->
+    <select id="getPerformanceDay" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.PerformanceDTO">
+		SELECT performanceYear
+		     , performanceMonth
+		     , performanceDay
+		     , memberNo
+		     , name
+		     , gender
+		     , examination
+		     , examTotal
+		  FROM performanceDay
+		 WHERE performanceYear = #{year}
+		   AND performanceMonth = #{month}
+    </select>
+    
+    <!-- 검사항목별 총 매출(연도별) -->
+    <select id="getTestSales" resultType="com.teampj.physicheck.dto.Sales2DTO">
+		SELECT paymentYear
+		     , testCode
+		     , total
+		  FROM testSales
+    </select>
+    
+    <!-- 검사항목별 총 매출(월별) -->
+    <select id="getTestSalesMonth" parameterType="Integer" resultType="com.teampj.physicheck.dto.Sales2DTO">
+		SELECT paymentYear
+		     , paymentMonth
+		     , testCode
+		     , total
+		  FROM testSalesMonth
+		 WHERE paymentYear = #{year}
+		 ORDER BY paymentYear, paymentMonth, testCode ASC
+    </select>
+    
+    <!-- 검사항목별 총 매출(일별) -->
+    <select id="getTestSalesDay" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.Sales2DTO">
+		SELECT paymentYear
+		     , paymentMonth
+		     , paymentDay
+		     , testCode
+		     , total
+		  FROM testSalesDay
+		 WHERE paymentYear = #{year}
+		   AND paymentMonth = #{month}
+		 ORDER BY paymentYear, paymentMonth, paymentDay, testCode ASC
+    </select>
+</mapper>

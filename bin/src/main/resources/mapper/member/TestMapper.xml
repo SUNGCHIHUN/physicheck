@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.dao.TestMapper">
+ 
+<!-- mental -->
+<!-- 회원정보 가져오기 -> 회원번호를 찾아서 다음에 예약번호를 찾기 위함 -->
+<select id="getMemberNo" parameterType="Integer" resultType="com.teampj.physicheck.dto.CustomerDTO">
+	SELECT * FROM(
+		SELECT m.*, r.reserveNo
+		FROM member m, reserve r
+		WHERE m.memberNo = r.memberNo
+		AND m.memberNo=${memberNo}
+		ORDER BY reserveNo DESC
+		)
+	WHERE ROWNUM = 1
+</select>
+<!-- 검사 보낼때 예약한 번호와 각 설문 no 상위 테이블(mental)no와 맞추기 위함 -->
+	<!-- <select id="getMemberNo" resultType="String" parameterType="String">
+		SELECT memberNo
+		FROM member
+		WHERE id=#{strId}
+	</select>
+	
+	<select id="getResurveNo" resultType="String" parameterType="String">
+		SELECT reserveNo
+		FROM reserve
+		WHERE memberNo=${memberNo}
+	</select> -->
+	
+<!-- select 제외 모든 crud는 resultType이 숫자 -->
+	<insert id="setMentalInsert1" parameterType="com.teampj.physicheck.dto.Survey1DTO">
+		 INSERT INTO SURVEY1(SURVEY1NO, ANSWER1, ANSWER2, ANSWER3, ANSWER4, ANSWER5 )
+		 VALUES((SELECT NVL(MAX(#{survey1No}),#{survey1No}) FROM SURVEY1), #{answer1}, #{answer2}, #{answer3}, #{answer4}, #{answer5})
+	</insert>
+	
+	<insert id="setMentalInsert2" parameterType="com.teampj.physicheck.dto.Survey2DTO">
+		 INSERT INTO SURVEY2(SURVEY2NO, ANSWER1, ANSWER2, ANSWER3, ANSWER4, ANSWER5) 
+		 VALUES((SELECT NVL(MAX(#{survey2No}),#{survey2No}) FROM SURVEY2), #{answer1}, #{answer2}, #{answer3}, #{answer4}, #{answer5})
+	</insert>
+	
+	<insert id="setMentalInsert3" parameterType="com.teampj.physicheck.dto.Survey3DTO">
+		 INSERT INTO SURVEY3(SURVEY3NO, ANSWER1, ANSWER2, ANSWER3, ANSWER4, ANSWER5) 
+		 VALUES((SELECT NVL(MAX(#{survey3No}),#{survey3No}) FROM SURVEY3), #{answer1}, #{answer2}, #{answer3}, #{answer4}, #{answer5})
+	</insert>
+	
+	<insert id="setMentalInsert4" parameterType="com.teampj.physicheck.dto.Survey4DTO">
+		 INSERT INTO SURVEY4(SURVEY4NO, ANSWER1, ANSWER2, ANSWER3, ANSWER4, ANSWER5) 
+		 VALUES((SELECT NVL(MAX(#{survey4No}),#{survey4No}) FROM SURVEY4), #{answer1}, #{answer2}, #{answer3}, #{answer4}, #{answer5})
+	</insert>	
+
+
+<!-- 상위테이블로 보냄 -->
+	<!-- <select id="mentalSelectAction" resultType="Integer">
+        SELECT reserveNo
+        FROM reserve
+        WHERE ID = #{strId}
+	</select> -->
+	
+	<insert id="mentalInsertAction" parameterType="com.teampj.physicheck.dto.MentalDTO">
+		 INSERT INTO MENTAL(MENTALNO, SURVEYNO, ID) 
+		 VALUES((SELECT NVL(MAX(#{surveyNo}),#{surveyNo}) FROM MENTAL), #{surveyNo}, #{id})
+	</insert>
+
+
+<!-- basic -->
+<!-- physical -->
+
+<!--   !!!   상위테이블(Basic)에 하위 테이블(Pressure, Urine, Bmi) 값 넘겨야함. -->
+	
+<!--   !!!   상위테이블(Physical)에 하위 테이블(6개 각 능력치) 값 넘겨야함. -->
+
+
+	
+<!--  - - - - - - - - - - Result - - - - - - - - - - - -->
+
+
+	<select id="getMentalNo" resultType="com.teampj.physicheck.dto.MentalDTO"> <!-- 아이디, 서베이번호-->
+		SELECT MAX(MENTALNO) as mentalNo, ID
+		FROM MENTAL
+		WHERE ID=#{strId}
+		GROUP BY ID
+	</select>
+
+
+<!-- mentalResult -->
+	<select id="getMentalResultAction" resultType="com.teampj.physicheck.dto.MentalDTO"> <!-- 아이디, 서베이번호, 의료진의견 -->
+		SELECT SURVEYNO, ID, COMMENTS
+		FROM MENTAL
+		WHERE ID=#{strId}
+		and MENTALNO=#{mentalNo}
+	</select>
+	
+<!-- BasicResult -->
+	<select id="getPressureResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.PressureDTO">
+        SELECT PRESSUREHIGH, PRESSURELOW
+        FROM PRESSURE
+        WHERE PRESSURENO='2'
+	</select>
+
+	<select id="getUrineResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.UrineDTO">
+        SELECT URINEPROTEIN, URINEACID, URINEGLUCOSE
+        FROM URINE
+        WHERE URINENO='2'
+	</select>	
+
+	<select id="getBmiResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.BmiDTO">
+        SELECT HEIGHT, WEIGHT, BMI, BODYFAT, BODYMUSCLE, BODYWATER
+        FROM BMI
+        WHERE BMINO='2'        
+	</select>
+
+<!-- PhysicalResult -->
+	<select id="getCardioEnduranceResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.CardioEnduranceDTO">
+        SELECT run3kmResult, balkeProtocolResult
+        FROM CARDIOENDURANCE
+        WHERE CARDIOENDURANCENO =  2
+	</select>	
+
+	<select id="getFlexibilityResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.FlexibilityDTO">
+        SELECT forwardBendingResult, bridgeResult
+        FROM FLEXIBILITY
+        WHERE FLEXIBILITYNO = 2
+	</select>
+	
+	<select id="getQuicknessResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.QuicknessDTO">
+        SELECT sideStepResult, burpeeTestResult
+        FROM QUICKNESS
+        WHERE QUICKNESSNO=2
+	</select>	
+	
+	<select id="getMuscularPowerResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.MuscularPowerDTO">
+        SELECT squirtResult, benchPressResult
+        FROM MUSCULARPOWER
+        WHERE MUSCULARPOWERNO=2
+	</select>	
+	
+	<select id="getMuscularEnduranceResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.MuscularEnduranceDTO">
+        SELECT sitUpResult, pushUpResult
+        FROM MUSCULARENDURANCE
+        WHERE MUSCULARENDURANCENO=2
+	</select>
+	
+	<select id="getAgilityResultAction" parameterType="String" resultType="com.teampj.physicheck.dto.AgilityDTO">
+        SELECT longJumpResult, run50Result	
+        FROM AGILITY
+        WHERE AGILITYNO=2
+	</select>
+	
+	<!-- 운동검사 리스트 -->
+	<select id="physicalResultList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.ReserveDTO">
+        select * from ( 
+                SELECT A.* , rownum as rn 
+                FROM (
+        select reserveNo, memberNo,  id , reserveDate , payState, basicNo, physicalNo, mentalNo, reviewState, bshow, pshow, mshow
+        from reserve where memberNo = #{memberNo}
+                              and not physicalNo is NULL
+                                   and pshow = 'n'
+           ) A 
+           )                 
+           WHERE rn BETWEEN #{start} AND #{end}                        
+	</select>
+	
+	<!-- 운동검사 갯수 가져오기 -->
+    <select id="physicalResultListCnt"  resultType="Integer">
+       select COUNT(*) as cnt from reserve where memberNo = #{memberNo}
+                                  and not physicalNo is NULL
+                                   and pshow = 'n'
+    </select>
+    
+    
+    <!-- 기초검사 등록여부 체크 -->
+    <select id="totalBasicChk" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM reserve where reserveNo = #{reserveNo} and bshow = 'n'
+    </select>
+    
+    <!-- 운동검사 등록여부 체크 -->
+    <select id="totalPhysicalChk" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM reserve where reserveNo = #{reserveNo} and pshow = 'n'
+    </select>
+    
+    <!-- 심리검사 등록여부 체크 -->
+    <select id="totalMentalChk" parameterType="int" resultType="int">
+        SELECT COUNT(*) FROM reserve where reserveNo = #{reserveNo} and mshow = 'n'
+    </select>
+    
+</mapper>

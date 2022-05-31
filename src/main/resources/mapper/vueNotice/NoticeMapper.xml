@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.teampj.physicheck.vue.dao.VueNoticeMapper">
+	<!-- 공지사항 - 조회수 -->
+<select id="readCnt" resultType="int">
+	SELECT COUNT(*) as cnt FROM notice
+</select>
+	<!-- 공지사항 - 조회수 증가 -->
+<update id="plusReadCnt" parameterType="com.teampj.physicheck.dto.NoticeDTO">
+	UPDATE notice SET readCnt=(readCnt+1) WHERE noticeNo =#{noticeNo}
+</update>
+	<!-- 공지사항 - 조회 -->
+<select id="noticeList" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.NoticeDTO">
+  	SELECT * FROM notice ORDER BY noticeNo DESC
+</select>
+	<!-- 공지사항 - 상세 -->
+<select id="noticeDetail" parameterType="int" resultType="com.teampj.physicheck.dto.NoticeDTO">
+	SELECT * FROM notice WHERE noticeNo=#{noticeNo}
+</select>
+	<!-- 공지사항 - 수정 -->
+<update id="noticeUpdateAction" parameterType="com.teampj.physicheck.dto.NoticeDTO">
+	UPDATE notice 
+		SET title=#{title}, writer=#{writer}, content=#{content}
+		WHERE noticeNo=#{noticeNo}
+</update>
+	<!-- 공지사항 - 등록 -->
+<insert id="noticeInsert" parameterType="com.teampj.physicheck.dto.NoticeDTO">
+	INSERT INTO notice(noticeNo, writer, title, content, inDate, readCnt) 
+  	VALUES((SELECT NVL(MAX(noticeNo)+1,1) FROM notice),#{writer},#{title},#{content},sysdate,0)
+</insert>
+	<!-- 공지사항 - 삭제 -->
+<delete id="noticeDelete" parameterType="com.teampj.physicheck.dto.NoticeDTO">
+	DELETE FROM notice WHERE noticeNo=#{noticeNo}
+</delete>
+
+	<!-- 공지사항 - 검색수 -->
+<select id="searchCnt"  parameterType="String" resultType="Integer">
+	<![CDATA[
+	SELECT COUNT(*) as cnt FROM notice WHERE title LIKE '%'||#{content}||'%'
+	]]>
+</select>	
+	
+	<!-- 공지사항 - 검색목록 -->
+<select id="noticeSearch" parameterType="java.util.Map" resultType="com.teampj.physicheck.dto.NoticeDTO">
+    <![CDATA[   
+       SELECT * FROM notice
+          WHERE title LIKE '%'||#{content}||'%'
+          ORDER BY indate DESC
+    ]]>
+</select>
+</mapper>

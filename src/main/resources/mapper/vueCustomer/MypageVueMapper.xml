@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+<mapper namespace="com.teampj.physicheck.vue.dao.MypageVueMapper">
+    <!-- 마이페이지 조회 -->
+    <select id="vueGetMemberInfo" parameterType="String" resultType="com.teampj.physicheck.dto.MemberDTO">
+		SELECT * 
+		FROM MEMBER 
+		WHERE ID = #{id}
+    </select><!-- WHERE MEMBERNO = #{memberNo} -->
+       
+	<!-- 마이페이지 수정 -->
+	<update id="vueSetMemberInfo" parameterType="com.teampj.physicheck.dto.MemberDTO">
+		UPDATE MEMBER 
+		SET password=#{password}, name=#{name}, address=#{address}, tel=#{tel}, email=#{email}
+		WHERE memberNo=#{memberNo}
+	</update>
+
+	<!-- 마이페이지 탈퇴 -->
+	<delete id="vueMemberDelete" parameterType="com.teampj.physicheck.dto.MemberDTO">
+		DELETE 
+		FROM member 
+		WHERE ID=#{id}
+	</delete>     
+</mapper>
